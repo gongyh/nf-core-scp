@@ -46,7 +46,6 @@ On release, automated continuous integration tests run the pipeline on a full-si
 
 4. Start running your own analysis!
 
-
     ```console
     nextflow run nf-core/scp -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input samplesheet.csv --genome EB1
     ```
