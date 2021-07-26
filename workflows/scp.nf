@@ -11,11 +11,17 @@ WorkflowScp.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [ params.input, params.multiqc_config, params.fasta, params.hmm ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
+// Check optional parameters
+ch_hmm = params.hmm ? file(params.hmm, checkIfExists: true) : file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
+ch_proteins = params.proteins ? Channel.fromPath(params.proteins) : []
+ch_prodigal_tf = params.prodigal_tf ? Channel.fromPath(params.prodigal_tf) : []
+ch_gtdb = params.gtdb ? file(params.gtdb, checkIfExists: true) : Channel.empty()
 
 /*
 ========================================================================================
@@ -39,6 +45,10 @@ def modules = params.modules.clone()
 // MODULE: Local to the pipeline
 //
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['tsv':'']] )
+include { CHECKM } from '../modules/local/checkm' addParams( options: modules['checkm'] )
+include { GTDBTK } from '../modules/local/gtdbtk' addParams( options: modules['gtdbtk'] )
+include { ROARY } from '../modules/local/roary' addParams( options: modules['roary'] )
+include { ROARY2FRIPAN } from '../modules/local/roary2fripan' addParams( options: modules['roary2fripan'] )
 
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
@@ -58,7 +68,11 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 // MODULE: Installed directly from nf-core/modules
 //
 include { FASTQC  } from '../modules/nf-core/modules/fastqc/main'  addParams( options: modules['fastqc'] )
-include { MULTIQC } from '../modules/nf-core/modules/multiqc/main' addParams( options: multiqc_options   )
+include { TRIMGALORE } from '../modules/nf-core/modules/trimgalore/main'  addParams( options: modules['trimgalore'] )
+include { SPADES } from '../modules/nf-core/modules/spades/main'  addParams( options: modules['spades'] )
+include { PROKKA } from '../modules/nf-core/modules/prokka/main'  addParams( options: modules['prokka'] )
+// tailored multiqc module
+include { MULTIQC } from '../modules/local/multiqc' addParams( options: multiqc_options   )
 
 /*
 ========================================================================================
@@ -89,6 +103,66 @@ workflow SCP {
     ch_software_versions = ch_software_versions.mix(FASTQC.out.version.first().ifEmpty(null))
 
     //
+    // MODULE: Run TrimGalore
+    //
+    TRIMGALORE (
+        INPUT_CHECK.out.reads
+    )
+    ch_software_versions = ch_software_versions.mix(TRIMGALORE.out.version.first().ifEmpty(null))
+
+    //
+    // MODULE: Run SPAdes
+    //
+    SPADES (
+        TRIMGALORE.out.reads,
+        ch_hmm
+    )
+    ch_software_versions = ch_software_versions.mix(SPADES.out.version.first().ifEmpty(null))
+
+    //
+    // MODULE: Run CheckM
+    //
+    CHECKM (
+        SPADES.out.scaffolds.map{ it[1] }.collect()
+    )
+    ch_software_versions = ch_software_versions.mix(CHECKM.out.version.ifEmpty(null))
+
+    //
+    // MODULE: Run GTDB-Tk
+    //
+    GTDBTK (
+        SPADES.out.scaffolds.map{ it[1] }.collect(),
+        ch_gtdb
+    )
+    ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.ifEmpty(null))
+
+    //
+    // MODULE: Run Prokka
+    //
+    PROKKA (
+        SPADES.out.scaffolds,
+        ch_proteins,
+        ch_prodigal_tf
+    )
+    ch_software_versions = ch_software_versions.mix(PROKKA.out.version.ifEmpty(null))
+
+    //
+    // MODULE: Run Roary
+    //
+    ROARY (
+        PROKKA.out.gff.map{ it[1] }.collect()
+    )
+    ch_software_versions = ch_software_versions.mix(ROARY.out.version.ifEmpty(null))
+
+    //
+    // MODULE: Run roary2fripan
+    //
+    ROARY2FRIPAN (
+        ROARY.out.roary_pa
+    )
+    ch_software_versions = ch_software_versions.mix(ROARY2FRIPAN.out.version.ifEmpty(null))
+
+    //
     // MODULE: Pipeline reporting
     //
     ch_software_versions
@@ -109,15 +183,15 @@ workflow SCP {
     workflow_summary    = WorkflowScp.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(GET_SOFTWARE_VERSIONS.out.yaml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
-
     MULTIQC (
-        ch_multiqc_files.collect()
+        ch_multiqc_config,
+        ch_multiqc_custom_config.collect().ifEmpty([]),
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
+        GET_SOFTWARE_VERSIONS.out.yaml.collect(),
+        FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
+        TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
+        TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
+        PROKKA.out.txt.collect{it[1]}.ifEmpty([])
     )
     multiqc_report       = MULTIQC.out.report.toList()
     ch_software_versions = ch_software_versions.mix(MULTIQC.out.version.ifEmpty(null))
