@@ -82,6 +82,59 @@
                 }
             }
         },
+        "process_config_options": {
+            "title": "Advanced process config options",
+            "type": "object",
+            "fa_icon": "fas fa-university",
+            "description": "Parameters used to config processes.",
+            "help_text": "The centralised nf-core configuration options for various processes.",
+            "properties": {
+                "clip_r1": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "--clip_r1 for TrimGalore."
+                },
+                "clip_r2": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "--clip_r2 for TrimGalore."
+                },
+                "three_prime_clip_r1": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "--three_prime_clip_r1 for TrimGalore."
+                },
+                "three_prime_clip_r2": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "--three_prime_clip_r2 for TrimGalore."
+                },
+                "spades_hmm": {
+                    "type": "boolean",
+                    "description": "enable hmm for SPAdes."
+                },
+                "hmm": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "--hmm for SPAdes."
+                },
+                "proteins": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "--proteins for Prokka."
+                },
+                "prodigal_tf": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "--prodigaltf for Prokka."
+                },
+                "gtdb": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "GTDB database, r202."
+                }
+            }
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -279,6 +332,9 @@
             "$ref": "#/definitions/reference_genome_options"
         },
         {
+            "$ref": "#/definitions/process_config_options"
+        },
+        {
             "$ref": "#/definitions/institutional_config_options"
         },
         {
@@ -287,38 +343,5 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ],
-    "properties": {
-        "clip_r1": {
-            "type": "integer",
-            "default": 0
-        },
-        "clip_r2": {
-            "type": "integer",
-            "default": 0
-        },
-        "three_prime_clip_r1": {
-            "type": "integer",
-            "default": 0
-        },
-        "three_prime_clip_r2": {
-            "type": "integer",
-            "default": 0
-        },
-        "spades_hmm": {
-            "type": "string"
-        },
-        "hmm": {
-            "type": "string"
-        },
-        "proteins": {
-            "type": "string"
-        },
-        "prodigal_tf": {
-            "type": "string"
-        },
-        "gtdb": {
-            "type": "string"
-        }
-    }
+    ]
 }
