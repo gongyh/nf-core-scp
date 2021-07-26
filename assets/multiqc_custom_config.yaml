@@ -1,0 +1,20 @@
+module_order:
+    - fastqc:
+        name: 'FastQC (raw)'
+        info: 'This section of the report shows FastQC results before adapter trimming.'
+        path_filters:
+            - './fastqc/*.zip'
+    - cutadapt
+    - fastqc:
+        name: 'FastQC (trimmed)'
+        info: 'This section of the report shows FastQC results after adapter trimming.'
+        path_filters:
+            - './trimgalore/fastqc/*.zip'
+
+extra_fn_clean_exts:
+    - '_2_val_2'
+    - '_val_1'
+
+sp:
+    cutadapt:
+        fn: '*trimming_report.txt'

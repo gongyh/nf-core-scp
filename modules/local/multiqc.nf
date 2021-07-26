@@ -34,9 +34,10 @@ process MULTIQC {
     path "*.version.txt"       , emit: version
 
     script:
-    def software = getSoftwareName(task.process)
+    def software      = getSoftwareName(task.process)
+    def custom_config = params.multiqc_config ? "--config $multiqc_custom_config" : ''
     """
-    multiqc -f $options.args .
+    multiqc -f $options.args $custom_config .
     multiqc --version | sed -e "s/multiqc, version //g" > ${software}.version.txt
     """
 }

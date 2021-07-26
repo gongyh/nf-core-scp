@@ -30,7 +30,7 @@ ch_gtdb = params.gtdb ? file(params.gtdb, checkIfExists: true) : Channel.empty()
 */
 
 ch_multiqc_config        = file("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
-ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
+ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : file("$projectDir/assets/multiqc_custom_config.yaml", checkIfExists: true)
 
 /*
 ========================================================================================
@@ -185,7 +185,7 @@ workflow SCP {
 
     MULTIQC (
         ch_multiqc_config,
-        ch_multiqc_custom_config.collect().ifEmpty([]),
+        ch_multiqc_custom_config,
         ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
         GET_SOFTWARE_VERSIONS.out.yaml.collect(),
         FASTQC.out.zip.collect{it[1]}.ifEmpty([]),

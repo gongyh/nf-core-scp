@@ -287,5 +287,38 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "clip_r1": {
+            "type": "integer",
+            "default": 0
+        },
+        "clip_r2": {
+            "type": "integer",
+            "default": 0
+        },
+        "three_prime_clip_r1": {
+            "type": "integer",
+            "default": 0
+        },
+        "three_prime_clip_r2": {
+            "type": "integer",
+            "default": 0
+        },
+        "spades_hmm": {
+            "type": "string"
+        },
+        "hmm": {
+            "type": "string"
+        },
+        "proteins": {
+            "type": "string"
+        },
+        "prodigal_tf": {
+            "type": "string"
+        },
+        "gtdb": {
+            "type": "string"
+        }
+    }
 }
