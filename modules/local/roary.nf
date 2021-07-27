@@ -26,13 +26,12 @@ process ROARY {
     path  '*.version.txt'                      , emit: version
 
     when:
-    prokka_gff3.size() > 1
+    prokka_gff3.toList().size().value > 1
 
     script:
     def software    = getSoftwareName(task.process)
     prefix          = options.suffix ?: software
     """
-    echo $prokka_gff3
     roary -p $task.cpus -f $prefix *.gff
 
     echo \$(roary -w 2>/dev/null) > ${software}.version.txt
