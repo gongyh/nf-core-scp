@@ -5,10 +5,11 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GTDBTK {
+    tag "$meta.id"
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:[:], publish_by_meta:[]) }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
 
     conda (params.enable_conda ? "bioconda::gtdbtk==1.5.1--pyhdfd78af_0" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -18,21 +19,26 @@ process GTDBTK {
     }
 
     input:
-    path genome
+    tuple val(meta), path('genome/*')
     path gtdb
 
     output:
     path "${prefix}"
-    path  '*.version.txt'         , emit: version
+    tuple val(meta), path("${prefix}.fa")  , emit: scaffolds
+    path  '*.version.txt'                  , emit: version
 
     script:
     def software    = getSoftwareName(task.process)
-    prefix          = options.suffix ?: software
+    prefix          = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
+    meta.genus      = "_"
     """
     export GTDBTK_DATA_PATH=$gtdb
+
+    cat genome/*.fa > ${prefix}.fa
+
     gtdbtk classify_wf \\
         $options.args \\
-        --genome_dir . \\
+        --genome_dir genome \\
         --extension fa \\
         --out_dir $prefix \\
         --cpus $task.cpus

@@ -131,7 +131,7 @@ workflow SCP {
     // MODULE: Run GTDB-Tk
     //
     GTDBTK (
-        SPADES.out.scaffolds.map{ it[1] }.collect(),
+        SPADES.out.scaffolds,
         ch_gtdb
     )
     ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.ifEmpty(null))
@@ -140,7 +140,7 @@ workflow SCP {
     // MODULE: Run Prokka
     //
     PROKKA (
-        SPADES.out.scaffolds,
+        GTDBTK.out.scaffolds,
         ch_proteins,
         ch_prodigal_tf
     )
@@ -150,7 +150,12 @@ workflow SCP {
     // MODULE: Run Roary
     //
     ROARY (
-        PROKKA.out.gff.map{ it[1] }.collect()
+        PROKKA.out.gff
+        .map { meta, gff ->
+           meta.id = ""; meta.single_end = false
+           [meta, gff]
+        }
+        .groupTuple()
     )
     ch_software_versions = ch_software_versions.mix(ROARY.out.version.ifEmpty(null))
 
