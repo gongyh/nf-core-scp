@@ -23,11 +23,14 @@ process SAMPLESHEET_CHECK {
 
     output:
     path '*.csv'
+    path  '*.version.txt'  , emit: version
 
     script: // This script is bundled with the pipeline, in nf-core/scp/bin/
+    def software    = getSoftwareName(task.process)
     """
     check_samplesheet.py \\
         $samplesheet \\
         samplesheet.valid.csv
+    touch ${software}.version.txt
     """
 }

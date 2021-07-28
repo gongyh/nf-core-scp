@@ -25,11 +25,14 @@ process GET_SOFTWARE_VERSIONS {
     output:
     path "software_versions.tsv"     , emit: tsv
     path 'software_versions_mqc.yaml', emit: yaml
+    path  '*.version.txt'            , emit: version
 
     script: // This script is bundled with the pipeline, in nf-core/scp/bin/
+    def software    = getSoftwareName(task.process)
     """
     echo $workflow.manifest.version > pipeline.version.txt
     echo $workflow.nextflow.version > nextflow.version.txt
     scrape_software_versions.py &> software_versions_mqc.yaml
+    touch ${software}.version.txt
     """
 }
