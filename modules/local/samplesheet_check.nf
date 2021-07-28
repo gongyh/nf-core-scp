@@ -1,5 +1,5 @@
 // Import generic module functions
-include { initOptions; saveFiles } from './functions'
+include { initOptions; saveFiles; getSoftwareName } from './functions'
 
 params.options = [:]
 options        = initOptions(params.options)
@@ -22,7 +22,7 @@ process SAMPLESHEET_CHECK {
     path samplesheet
 
     output:
-    path '*.csv'
+    path '*.csv'           , emit: csv
     path  '*.version.txt'  , emit: version
 
     script: // This script is bundled with the pipeline, in nf-core/scp/bin/
