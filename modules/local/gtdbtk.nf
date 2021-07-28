@@ -5,7 +5,7 @@ params.options = [:]
 options        = initOptions(params.options)
 
 process GTDBTK {
-    tag "$meta.id"
+    tag { meta.id }
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
@@ -19,22 +19,24 @@ process GTDBTK {
     }
 
     input:
-    tuple val(meta), path('genome/*')
+    tuple val(meta), path(genome)
     path gtdb
 
     output:
     path "${prefix}"
-    tuple val(meta), path("${prefix}.fa")  , emit: scaffolds
+    tuple val(meta), path("genome/${prefix}.fa")  , emit: scaffolds
     path  '*.version.txt'                  , emit: version
 
     script:
     def software    = getSoftwareName(task.process)
+    meta.id         = meta.id ?: "${genome}" - ~/\.\w+$/
     prefix          = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
     meta.genus      = "_"
     """
     export GTDBTK_DATA_PATH=$gtdb
 
-    cat genome/*.fa > ${prefix}.fa
+    mkdir -p genome
+    cp $genome genome/${prefix}.fa
 
     gtdbtk classify_wf \\
         $options.args \\

@@ -22,6 +22,7 @@ ch_hmm = params.hmm ? file(params.hmm, checkIfExists: true) : file("$projectDir/
 ch_proteins = params.proteins ? Channel.fromPath(params.proteins) : []
 ch_prodigal_tf = params.prodigal_tf ? Channel.fromPath(params.prodigal_tf) : []
 ch_gtdb = params.gtdb ? file(params.gtdb, checkIfExists: true) : Channel.empty()
+ch_extra_genomes = params.extra_genomes ? Channel.fromPath(params.extra_genomes) : Channel.empty()
 
 /*
 ========================================================================================
@@ -70,9 +71,9 @@ multiqc_options.args += params.multiqc_title ? Utils.joinModuleArgs(["--title \"
 include { FASTQC  } from '../modules/nf-core/modules/fastqc/main'  addParams( options: modules['fastqc'] )
 include { TRIMGALORE } from '../modules/nf-core/modules/trimgalore/main'  addParams( options: modules['trimgalore'] )
 include { SPADES } from '../modules/nf-core/modules/spades/main'  addParams( options: modules['spades'] )
-include { PROKKA } from '../modules/nf-core/modules/prokka/main'  addParams( options: modules['prokka'] )
-// tailored multiqc module
-include { MULTIQC } from '../modules/local/multiqc' addParams( options: multiqc_options   )
+// tailored modules
+include { PROKKA } from '../modules/local/prokka'  addParams( options: modules['prokka'] )
+include { MULTIQC } from '../modules/local/multiqc' addParams( options: multiqc_options )
 
 /*
 ========================================================================================
@@ -130,8 +131,13 @@ workflow SCP {
     //
     // MODULE: Run GTDB-Tk
     //
+    ch_extra_genomes
+        .map { it -> 
+            [[id:''], it]
+        }
+        .set { ch_extra_meta }
     GTDBTK (
-        SPADES.out.scaffolds,
+        SPADES.out.scaffolds.mix(ch_extra_meta),
         ch_gtdb
     )
     ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.ifEmpty(null))
@@ -151,11 +157,11 @@ workflow SCP {
     //
     ROARY (
         PROKKA.out.gff
-        .map { meta, gff ->
-            meta.id = ""; meta.single_end = false
-            [meta, gff]
-        }
-        .groupTuple()
+            .map { meta, gff ->
+                meta.id = ""; meta.single_end = false
+                [meta, gff]
+            }
+            .groupTuple()
     )
     ch_software_versions = ch_software_versions.mix(ROARY.out.version.ifEmpty(null))
 

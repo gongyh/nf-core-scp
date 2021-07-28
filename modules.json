@@ -6,16 +6,10 @@
             "fastqc": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             },
-            "multiqc": {
-                "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
-            },
-            "trimgalore": {
-                "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
-            },
             "spades": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             },
-            "prokka": {
+            "trimgalore": {
                 "git_sha": "e937c7950af70930d1f34bb961403d9d2aa81c7d"
             }
         }

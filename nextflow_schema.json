@@ -132,6 +132,11 @@
                     "type": "string",
                     "format": "file-path",
                     "description": "GTDB database, r202."
+                },
+                "extra_genomes": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Supplemental sequences for pangenome construction, must be *.fa with different prefix."
                 }
             }
         },

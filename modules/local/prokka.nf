@@ -38,8 +38,9 @@ process PROKKA {
     path "*.version.txt", emit: version
 
     script:
-    def software = getSoftwareName(task.process)
-    prefix   = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
+    def software     = getSoftwareName(task.process)
+    prefix           = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
+    def strain       = options.strain ?: "${meta.id}"
     def proteins_opt = proteins ? "--proteins ${proteins[0]}" : ""
     def prodigal_opt = prodigal_tf ? "--prodigaltf ${prodigal_tf[0]}" : ""
     """
@@ -47,7 +48,7 @@ process PROKKA {
         $options.args \\
         --cpus $task.cpus \\
         --prefix $prefix \\
-        --strain $prefix \\
+        --strain $strain \\
         $proteins_opt \\
         $prodigal_tf \\
         $fasta
