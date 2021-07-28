@@ -152,8 +152,8 @@ workflow SCP {
     ROARY (
         PROKKA.out.gff
         .map { meta, gff ->
-           meta.id = ""; meta.single_end = false
-           [meta, gff]
+            meta.id = ""; meta.single_end = false
+            [meta, gff]
         }
         .groupTuple()
     )
