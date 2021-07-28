@@ -132,7 +132,7 @@ workflow SCP {
     // MODULE: Run GTDB-Tk
     //
     ch_extra_genomes
-        .map { it -> 
+        .map { it ->
             [[id:''], it]
         }
         .set { ch_extra_meta }
