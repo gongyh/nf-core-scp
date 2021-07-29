@@ -123,9 +123,9 @@ workflow SCP {
     // MODULE: Run CheckM
     //
     CHECKM (
-        SPADES.out.scaffolds.map{ it[1] }.collect()
+        SPADES.out.scaffolds
     )
-    ch_software_versions = ch_software_versions.mix(CHECKM.out.version.ifEmpty(null))
+    ch_software_versions = ch_software_versions.mix(CHECKM.out.version.first().ifEmpty(null))
 
     //
     // MODULE: Run GTDB-Tk
@@ -139,7 +139,7 @@ workflow SCP {
         SPADES.out.scaffolds.mix(ch_extra_meta),
         ch_gtdb
     )
-    ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.ifEmpty(null))
+    ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.first().ifEmpty(null))
 
     //
     // MODULE: Run Prokka
@@ -149,7 +149,7 @@ workflow SCP {
         ch_proteins,
         ch_prodigal_tf
     )
-    ch_software_versions = ch_software_versions.mix(PROKKA.out.version.ifEmpty(null))
+    ch_software_versions = ch_software_versions.mix(PROKKA.out.version.first().ifEmpty(null))
 
     //
     // MODULE: Run Roary

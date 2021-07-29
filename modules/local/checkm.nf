@@ -8,7 +8,7 @@ process CHECKM {
     label 'process_high'
     publishDir "${params.outdir}",
         mode: params.publish_dir_mode,
-        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:[:], publish_by_meta:[]) }
+        saveAs: { filename -> saveFiles(filename:filename, options:params.options, publish_dir:getSoftwareName(task.process), meta:meta, publish_by_meta:['id']) }
 
     conda (params.enable_conda ? "bioconda::checkm-genome==1.1.3--py_1" : null)
     if (workflow.containerEngine == 'singularity' && !params.singularity_pull_docker_container) {
@@ -18,23 +18,26 @@ process CHECKM {
     }
 
     input:
-    path genome_files
+    tuple val(meta), path(genome)
 
     output:
-    path "genome_completeness.tsv", emit: completeness
+    path "${prefix}_completeness.tsv", emit: completeness
     path  '*.version.txt'         , emit: version
 
     script:
     def software    = getSoftwareName(task.process)
+    prefix          = options.suffix ? "${meta.id}${options.suffix}" : "${meta.id}"
     """
-    mkdir -p checkm_out
+    mkdir -p checkm_out genomes
+    cp $genome genomes/
+
     checkm lineage_wf \\
         --extension fa \\
         --threads $task.cpus \\
         $options.args \\
         --tab_table \\
-        --file genome_completeness.tsv \\
-        . checkm_out
+        --file ${prefix}_completeness.tsv \\
+        genomes checkm_out
 
     echo \$(checkm -h 2>&1) | grep CheckM | sed 's/^.*CheckM v//; s/ .*\$//' > ${software}.version.txt
     """

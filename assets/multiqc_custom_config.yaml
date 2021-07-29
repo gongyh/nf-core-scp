@@ -12,7 +12,7 @@ module_order:
             - './trimgalore/fastqc/*.zip'
 
 extra_fn_clean_exts:
-    - '_2_val_2'
+    - '_val_2'
     - '_val_1'
 
 sp:
