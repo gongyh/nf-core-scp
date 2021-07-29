@@ -35,9 +35,8 @@ process MULTIQC {
 
     script:
     def software      = getSoftwareName(task.process)
-    def custom_config = params.multiqc_config ? "--config $multiqc_custom_config" : ''
     """
-    multiqc -f $options.args $custom_config .
+    multiqc -f --config $multiqc_custom_config $options.args .
     multiqc --version | sed -e "s/multiqc, version //g" > ${software}.version.txt
     """
 }
