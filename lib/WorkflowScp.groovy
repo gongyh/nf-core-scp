@@ -17,6 +17,22 @@ class WorkflowScp {
     }
 
     //
+    // Function that parses and returns the completeness and contamination from the CheckM output
+    //
+    public static ArrayList getCompletenessContamination(checkm_tsv) {
+        def lines = checkm_tsv.readLines()
+        String[] items = lines[1].split('\t')
+        def percent_completeness = items[11].toFloat()
+        def percent_contamination = items[12].toFloat()
+
+        def pass = false
+        if ((percent_completeness >= 40.0) && (percent_contamination<=10.0)) {
+            pass = true
+        }
+        return [ pass, percent_completeness, percent_contamination ]
+    }
+
+    //
     // Get workflow summary for MultiQC
     //
     public static String paramsSummaryMultiqc(workflow, summary) {

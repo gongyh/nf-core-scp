@@ -119,24 +119,31 @@ workflow SCP {
     )
     ch_software_versions = ch_software_versions.mix(SPADES.out.version.first().ifEmpty(null))
 
+    SPADES.out.scaffolds
+        .mix ( ch_extra_genomes.map { it -> [[id:''], it] } )
+        .set { ch_all_genomes }
+
     //
     // MODULE: Run CheckM
     //
     CHECKM (
-        SPADES.out.scaffolds
+        ch_all_genomes
     )
     ch_software_versions = ch_software_versions.mix(CHECKM.out.version.first().ifEmpty(null))
+
+    CHECKM.out.completeness
+        .map { meta, genome, completeness_tsv -> [meta, genome, WorkflowScp.getCompletenessContamination(completeness_tsv)] }
+        .branch { meta, genome, checkm ->
+            pass: checkm[0]
+            return [meta, genome]
+        }
+        .set { ch_hq_genomes }
 
     //
     // MODULE: Run GTDB-Tk
     //
-    ch_extra_genomes
-        .map { it ->
-            [[id:''], it]
-        }
-        .set { ch_extra_meta }
     GTDBTK (
-        SPADES.out.scaffolds.mix(ch_extra_meta),
+        ch_hq_genomes.pass,
         ch_gtdb
     )
     ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.first().ifEmpty(null))

@@ -22,8 +22,8 @@ process CHECKM {
     tuple val(meta), path(genome)
 
     output:
-    path "${prefix}_completeness.tsv", emit: completeness
-    path  '*.version.txt'         , emit: version
+    tuple val(meta), path("genomes/${genome}"), path("${prefix}_completeness.tsv"),   emit: completeness
+    path  '*.version.txt'   , emit: version
 
     script:
     def software    = getSoftwareName(task.process)
