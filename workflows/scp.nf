@@ -47,6 +47,7 @@ def modules = params.modules.clone()
 include { GET_SOFTWARE_VERSIONS } from '../modules/local/get_software_versions' addParams( options: [publish_files : ['tsv':'']] )
 include { CHECKM } from '../modules/local/checkm' addParams( options: modules['checkm'] )
 include { GTDBTK } from '../modules/local/gtdbtk' addParams( options: modules['gtdbtk'] )
+include { RETRIEVE_GENOMES } from '../modules/local/retrieve_genomes' addParams( options: modules['retrieve_genomes'] )
 include { ROARY } from '../modules/local/roary' addParams( options: modules['roary'] )
 include { ROARY2FRIPAN } from '../modules/local/roary2fripan' addParams( options: modules['roary2fripan'] )
 
@@ -119,23 +120,27 @@ workflow SCP {
     )
     ch_software_versions = ch_software_versions.mix(SPADES.out.version.first().ifEmpty(null))
 
-    SPADES.out.scaffolds
-        .mix ( ch_extra_genomes.map { it -> [[id:''], it] } )
-        .set { ch_all_genomes }
+    ch_extra_genomes.map { it ->
+        def meta = [:]; meta.id = it.name.replaceFirst(~/\.[^\.]+$/, ''); meta.single_end = false
+        [meta, it]
+    }
+    .set {ch_extra_genomes_meta}
 
     //
     // MODULE: Run CheckM
     //
     CHECKM (
-        ch_all_genomes
+        SPADES.out.scaffolds.mix(ch_extra_genomes_meta)
     )
     ch_software_versions = ch_software_versions.mix(CHECKM.out.version.first().ifEmpty(null))
 
     CHECKM.out.completeness
-        .map { meta, genome, completeness_tsv -> [meta, genome, WorkflowScp.getCompletenessContamination(completeness_tsv)] }
+        .map { meta, genome, completeness_tsv ->
+            [meta, genome, WorkflowScp.getCompletenessContamination(completeness_tsv)]
+        }
         .branch { meta, genome, checkm ->
             pass: checkm[0]
-            return [meta, genome]
+                return [meta, genome]
         }
         .set { ch_hq_genomes }
 
@@ -148,11 +153,47 @@ workflow SCP {
     )
     ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.first().ifEmpty(null))
 
+    GTDBTK.out.scaffolds
+        .map { meta, scaffolds, taxa -> [meta, WorkflowScp.getGenus(taxa), scaffolds] }
+        .multiMap { meta, genus, scaffolds ->
+            genome:
+                def meta2 = meta.clone(); meta2.genus = genus
+                [meta2, scaffolds]
+            taxa:
+                def meta3 = meta.clone(); meta3.id = ""; meta3.genus = genus
+                meta3
+        }
+        .set {ch_gtdbtk_genomes}
+
+    ch_gtdbtk_genomes.taxa.unique().set{ch_genus_meta}
+
+    //
+    // MODULE: Run retrieve_genomes
+    //
+    RETRIEVE_GENOMES (
+        ch_genus_meta,
+        ch_gtdb
+    )
+
+    RETRIEVE_GENOMES.out.scaffolds
+        .map { meta, scaffolds ->
+            def refs = []
+            for (scf in scaffolds) {
+                def meta2 = meta.clone()
+                meta2.id = scf.name.replaceFirst(~/\.[^\.]+$/, '')
+                refs << [meta2, scf]
+            }
+            refs
+        }
+        .flatten()
+        .collate(2)
+        .set {ch_gtdb_genomes}
+
     //
     // MODULE: Run Prokka
     //
     PROKKA (
-        GTDBTK.out.scaffolds,
+        ch_gtdbtk_genomes.genome.mix(ch_gtdb_genomes),
         ch_proteins,
         ch_prodigal_tf
     )

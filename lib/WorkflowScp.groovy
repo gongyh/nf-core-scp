@@ -33,6 +33,17 @@ class WorkflowScp {
     }
 
     //
+    // Function that parses and returns the genus from the GTDB-Tk output
+    //
+    public static String getGenus(taxa_txt) {
+        def lines = taxa_txt.readLines()
+        String[] items = lines[0].split(';')
+        def genus = items[5]
+
+        return genus
+    }
+
+    //
     // Get workflow summary for MultiQC
     //
     public static String paramsSummaryMultiqc(workflow, summary) {

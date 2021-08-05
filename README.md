@@ -25,7 +25,14 @@ On release, automated continuous integration tests run the pipeline on a full-si
 ## Pipeline summary
 
 1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+2. Adapter and quality trimming ([`Trim Galore!`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
+3. Single cell genome assembly ([`SPAdes`](https://cab.spbu.ru/software/spades/))
+4. Genome completeness and contamination estimation ([`CheckM`](https://ecogenomics.github.io/CheckM/))
+5. Taxonomic classification ([`GTDB-Tk`](https://ecogenomics.github.io/GTDBTk/))
+6. Gene annotation ([`Prokka`](https://github.com/tseemann/prokka))
+7. Pan-genome analysis ([`Roary`](https://sanger-pathogens.github.io/Roary/))
+8. Pan-genome visualization ([`roary2fripan`](https://github.com/kwongj/roary2fripan))
+9. Analysis report generation ([`MultiQC`](http://multiqc.info/))
 
 ## Quick Start
 
@@ -37,6 +44,8 @@ On release, automated continuous integration tests run the pipeline on a full-si
 
     ```console
     nextflow run nf-core/scp -profile test,<docker/singularity/podman/shifter/charliecloud/conda/institute>
+    # or
+    nextflow run nf-core/scp -profile test_full,<docker/singularity/podman/shifter/charliecloud/conda/institute>
     ```
 
     > * Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
