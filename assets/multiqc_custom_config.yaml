@@ -43,4 +43,4 @@ sp:
     cutadapt:
         fn: '*trimming_report.txt'
     checkm:
-        fn: 'mqc_*_completeness.tsv'
+        fn: 'checkm_*.tsv'

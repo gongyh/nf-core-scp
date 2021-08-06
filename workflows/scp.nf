@@ -249,7 +249,7 @@ workflow SCP {
         FASTQC.out.zip.collect{it[1]}.ifEmpty([]),
         TRIMGALORE.out.zip.collect{it[1]}.ifEmpty([]),
         TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]),
-        CHECKM.out.mqc_tsv.collect{it[1]}.ifEmpty([]),
+        CHECKM.out.mqc_tsv.collect().ifEmpty([]),
         PROKKA.out.txt.collect{it[1]}.ifEmpty([])
     )
     multiqc_report       = MULTIQC.out.report.toList()
