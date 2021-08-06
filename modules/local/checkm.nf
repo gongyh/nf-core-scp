@@ -41,7 +41,7 @@ process CHECKM {
         --file ${prefix}_completeness.tsv \\
         genomes checkm_out
 
-    cat ${prefix}_completeness.tsv | grep -v Completeness | cut -f1,2,12,13,14 > checkm_${prefix}.tsv
+    cat ${prefix}_completeness.tsv | cut -f1,2,12,13,14 > checkm_${prefix}.tsv
 
     echo \$(checkm -h 2>&1) | grep CheckM | sed 's/^.*CheckM v//; s/ .*\$//' > ${software}.version.txt
     """
