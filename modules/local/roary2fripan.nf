@@ -27,7 +27,7 @@ process ROARY2FRIPAN {
 
     script:
     def software    = getSoftwareName(task.process)
-    prefix          = options.suffix ?: software
+    prefix          = options.suffix ? "${meta.genus}${options.suffix}" : "${meta.genus}"
     """
     roary2fripan.py --input $roary_pa ${prefix}
 

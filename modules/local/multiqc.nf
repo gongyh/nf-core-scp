@@ -25,6 +25,7 @@ process MULTIQC {
     path ('fastqc/*')
     path ('trimgalore/fastqc/*')
     path ('cutadapt/*')
+    path ('checkm/*')
     path ('prokka/*')
 
     output:

@@ -41,6 +41,7 @@ process GTDBTK {
     if [[ -f $gtdb ]]; then
         mkdir -p $prefix
         echo 'd__Bacteria;p__Proteobacteria;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Escherichia;s__Escherichia coli' > taxa.txt
+        touch ${software}.version.txt
     else
         gtdbtk classify_wf \\
             $options.args \\
@@ -52,8 +53,8 @@ process GTDBTK {
         if [ -f ${prefix}/*.summary.tsv ]; then
             cut -f2 ${prefix}/*.summary.tsv | grep -v classification > taxa.txt
         fi
-    fi
 
-    echo \$(gtdbtk -h 2>&1) | grep 'GTDB-Tk' | sed 's/^.*GTDB-Tk v//; s/ .*\$//' > ${software}.version.txt
+        echo \$(gtdbtk -h 2>&1) | grep 'GTDB-Tk' | sed 's/^.*GTDB-Tk v//; s/ .*\$//' > ${software}.version.txt
+    fi
     """
 }

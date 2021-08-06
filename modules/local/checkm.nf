@@ -24,6 +24,7 @@ process CHECKM {
     output:
     tuple val(meta), path("genomes/${genome}"), path("${prefix}_completeness.tsv"),   emit: completeness
     path  '*.version.txt'   , emit: version
+    path  "mqc_${prefix}_completeness.tsv", emit: mqc_tsv
 
     script:
     def software    = getSoftwareName(task.process)
@@ -39,6 +40,8 @@ process CHECKM {
         --tab_table \\
         --file ${prefix}_completeness.tsv \\
         genomes checkm_out
+
+    cat ${prefix}_completeness.tsv | grep -v Completeness | cut -f1,2,12,13,14 > mqc_${prefix}_completeness.tsv
 
     echo \$(checkm -h 2>&1) | grep CheckM | sed 's/^.*CheckM v//; s/ .*\$//' > ${software}.version.txt
     """

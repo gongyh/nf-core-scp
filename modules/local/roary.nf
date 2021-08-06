@@ -31,7 +31,7 @@ process ROARY {
 
     script:
     def software    = getSoftwareName(task.process)
-    prefix          = options.suffix ?: software
+    prefix          = options.suffix ? "${meta.genus}${options.suffix}" : "${meta.genus}"
     """
     roary -p $task.cpus -f $prefix *.gff
 
