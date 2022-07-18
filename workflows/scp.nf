@@ -144,16 +144,31 @@ workflow SCP {
         }
         .set { ch_hq_genomes }
 
-    //
-    // MODULE: Run GTDB-Tk
-    //
-    GTDBTK (
+    if (params.gtdb_genus) {
+      ch_hq_genomes.pass
+        .map {meta,scaffolds -> [meta, params.gtdb_genus, scaffolds]}
+        .multiMap { meta, genus, scaffolds ->
+            genome:
+                def meta2 = meta.clone(); meta2.genus = genus
+                [meta2, scaffolds]
+            taxa:
+                def meta3 = meta.clone(); meta3.id = ""; meta3.genus = genus
+                meta3
+        }
+        .set {ch_gtdbtk_genomes}
+
+      ch_gtdbtk_genomes.taxa.unique().set{ch_genus_meta}
+    } else {
+      //
+      // MODULE: Run GTDB-Tk
+      //
+      GTDBTK (
         ch_hq_genomes.pass,
         ch_gtdb
-    )
-    ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.first().ifEmpty(null))
+      )
+      ch_software_versions = ch_software_versions.mix(GTDBTK.out.version.first().ifEmpty(null))
 
-    GTDBTK.out.scaffolds
+      GTDBTK.out.scaffolds
         .map { meta, scaffolds, taxa -> [meta, WorkflowScp.getGenus(taxa), scaffolds] }
         .multiMap { meta, genus, scaffolds ->
             genome:
@@ -165,7 +180,8 @@ workflow SCP {
         }
         .set {ch_gtdbtk_genomes}
 
-    ch_gtdbtk_genomes.taxa.unique().set{ch_genus_meta}
+      ch_gtdbtk_genomes.taxa.unique().set{ch_genus_meta}
+    }
 
     //
     // MODULE: Run retrieve_genomes

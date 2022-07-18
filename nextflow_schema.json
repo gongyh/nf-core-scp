@@ -133,6 +133,11 @@
                     "format": "file-path",
                     "description": "GTDB database, r202."
                 },
+                "gtdb_genus": {
+                    "type": "string",
+                    "description": "Directly set GTDB genus, not performing GTDB-tk.",
+                    "fa_icon": "fas fa-barcode"
+                },
                 "extra_genomes": {
                     "type": "string",
                     "format": "file-path",
